@@ -20,6 +20,9 @@ hermes plugins install roteo-ai/hermes-plugin-roteo
 hermes plugins enable roteo-claude
 ```
 
+Hermes notes that this is a "custom (unreviewed) source, not from the Hermes catalog". That is
+expected: the plugin installs from this repository, not from Nous Research's catalog.
+
 Add your key to the `.env` of the Hermes profile you use:
 
 | Profile | `.env` location |
