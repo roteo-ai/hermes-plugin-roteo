@@ -1,0 +1,40 @@
+name: roteo-claude
+kind: model-provider
+version: 0.1.0
+manifest_version: 2
+description: Claude via Roteo. Claude models through Roteo with your Roteo API key, driven through the official Claude Code CLI; Hermes owns tools, approvals and compaction. No Claude login needed.
+author: Roteo (fork of Nous Research's DirectSDK plugin for Hermes)
+license: MIT
+homepage: https://github.com/roteo-ai/hermes-plugin-roteo
+tags: [model-provider, anthropic, claude, roteo]
+requires_hermes: ">=0.22.0"
+platforms: []
+optional_env:
+  - ROTEO_API_KEY
+  - ROTEO_BASE_URL
+  - ROTEO_CLAUDE_COMMAND
+  - ROTEO_CLAUDE_CONFIG_DIR
+external_dependencies:
+  - name: claude
+    check: "claude --version"
+    install: "npm install -g @anthropic-ai/claude-code"
+config_schema:
+  roteo_base_url:
+    type: string
+    default: ""
+    label: Roteo API base URL
+    description: Leave empty for https://api.roteo.ai. Overrides ROTEO_BASE_URL from the profile .env.
+  claude_config_dir:
+    type: string
+    default: ""
+    label: Claude Code config directory
+    description: >-
+      Claude Code's config directory for this profile. Leave empty for the profile's own
+      roteo-claude/claude-config folder, which keeps it apart from any Claude login of yours.
+  claude_code_telemetry:
+    type: bool
+    default: false
+    label: Claude Code telemetry
+    description: >-
+      Let Claude Code send its usage telemetry and fetch feature flags from Anthropic. Off by default:
+      Roteo keeps your identity away from the model vendor, and the model list does not need it.
