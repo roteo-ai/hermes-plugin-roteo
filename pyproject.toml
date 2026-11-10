@@ -1,6 +1,6 @@
 [project]
 name = "hermes-plugin-roteo"
-version = "0.1.0"
+version = "0.2.0"
 description = "Hermes Agent model-provider plugin: Claude via Roteo, driven through the official Claude Code CLI (fork of Nous Research's DirectSDK plugin for Hermes)"
 readme = "README.md"
 license = { text = "MIT" }

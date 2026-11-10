@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 
 PLUGIN_ID = 'roteo-claude'
-VERSION = '0.1.0'  # plugin.yaml `version`; tests/test_roteo.py keeps them equal
+VERSION = '0.2.0'  # plugin.yaml `version`; tests/test_roteo.py keeps them equal
 KEY_ENV = 'ROTEO_API_KEY'
 URL_ENV = 'ROTEO_BASE_URL'
 DEFAULT_BASE_URL = 'https://api.roteo.ai'

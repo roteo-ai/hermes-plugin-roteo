@@ -13,6 +13,10 @@ from pathlib import Path
 
 import pytest
 
+# ROTEO: model_catalog reads Roteo's live model list at import; the suite stays offline and checks the
+# pinned tables (tests/test_live_catalog.py drives the live path with fakes).
+os.environ.setdefault("ROTEO_LIVE_CATALOG", "0")
+
 HERMES_AGENT_REPO = Path(os.environ.get("HERMES_AGENT_REPO") or Path.home() / ".hermes" / "hermes-agent").expanduser()
 REPO_ROOT = Path(__file__).resolve().parent
 PLUGIN_NAME = "roteo-claude"

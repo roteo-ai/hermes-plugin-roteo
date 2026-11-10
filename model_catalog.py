@@ -1,4 +1,14 @@
 """Pinned native routes; a loopback gateway needs explicit long-context selection."""
+import json
+import os
+import re
+import urllib.request
+
+try:
+    from . import roteo
+except ImportError:
+    import roteo
+
 CONTEXT_WINDOWS = {
     'claude-sonnet-5-5': 1_000_000,
     'claude-sonnet-5': 1_000_000,
@@ -7,6 +17,7 @@ CONTEXT_WINDOWS = {
     'claude-opus-5-5': 1_000_000,
     'claude-opus-5': 1_000_000,
     'claude-opus-4-8': 1_000_000,
+    'claude-fable-5-2': 1_000_000,
     'claude-fable-5-1': 1_000_000,
     'claude-mythos-5-1': 1_000_000,
 }
@@ -33,11 +44,65 @@ ALIASES = {
     'haiku': 'claude-haiku-5-5',
     'claude-haiku-4-5': 'claude-haiku-4-5-20251001',
     'opus': 'claude-opus-5-5',
-    'fable': 'claude-fable-5-1',
+    'fable': 'claude-fable-5-2',
 }
 # Haiku 4.5 rejects `thinking: {'type': 'adaptive'}` with a 400 upstream; its effort signal
 # still applies. Unknown routes keep adaptive so future models are not silently downgraded.
 NO_ADAPTIVE_THINKING = frozenset({'claude-haiku-4-5-20251001'})
+
+# ROTEO: the family short names follow Roteo's live model list, so a model Roteo adds reaches every
+# Hermes user the day it goes live, with no plugin release and nothing for them to update. Claude
+# Code itself is no help here: behind any ANTHROPIC_BASE_URL it maps `fable`, `opus` & co. through
+# its own gateway table, which lags the newest models. The tables above stay the offline baseline:
+# the read is one unauthenticated GET of `<base>/v1/models` at load, 2 s at most, and any failure
+# keeps them as they are. Set ROTEO_LIVE_CATALOG=0 to skip it (the test suite does).
+LIVE_CATALOG_ENV = 'ROTEO_LIVE_CATALOG'
+LIVE_CATALOG_TIMEOUT = 2.0
+_FAMILY_ID = re.compile(r'^claude-(opus|sonnet|haiku|fable)-(\d+)(?:-(\d{1,2}))?$')
+
+
+def newest_per_family(rows):
+    """``{family: (id, window)}``: the newest plain ``claude-<family>-<major>[-<minor>]`` id in a
+    ``/v1/models`` list, with its context window. Dated snapshots, `-batch` and other suffixes never
+    match, and a row without a window the native routes know (1M or 200K) is skipped rather than
+    guessed at."""
+    best = {}
+    for row in rows if isinstance(rows, list) else ():
+        model = str(row.get('id') or '') if isinstance(row, dict) else ''
+        match = _FAMILY_ID.match(model)
+        window = row.get('max_input_tokens') if match else None
+        if not match or window not in (1_000_000, 200_000):
+            continue
+        family, version = match.group(1), (int(match.group(2)), int(match.group(3) or 0))
+        if family not in best or version > best[family][0]:
+            best[family] = (version, model, window)
+    return {family: (model, window) for family, (_, model, window) in best.items()}
+
+
+def live_rows(timeout=LIVE_CATALOG_TIMEOUT):
+    """Roteo's ``/v1/models`` rows, or None (switched off, offline, or any unexpected answer)."""
+    if os.environ.get(LIVE_CATALOG_ENV, '').strip() == '0':
+        return None
+    try:
+        url = roteo.base_url() + '/v1/models'
+        request = urllib.request.Request(url, headers={
+            'accept': 'application/json', roteo.CLIENT_HEADER: f'hermes-roteo/{roteo.VERSION}'})
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            rows = json.loads(response.read(2_000_000)).get('data')
+    except Exception:
+        return None
+    return rows if isinstance(rows, list) else None
+
+
+def follow_live_catalog(rows):
+    """Point each family short name at Roteo's newest model of that family, pinned at the window
+    Roteo reports; a route the tables above already pin keeps its pinned window."""
+    for family, (model, window) in newest_per_family(rows).items():
+        CONTEXT_WINDOWS.setdefault(model, window)
+        ALIASES[family] = model
+
+
+follow_live_catalog(live_rows())
 
 
 def _route_base(base):

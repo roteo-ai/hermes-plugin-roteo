@@ -1,6 +1,6 @@
 name: roteo-claude
 kind: model-provider
-version: 0.1.0
+version: 0.2.0
 manifest_version: 2
 description: Claude via Roteo. Claude models through Roteo with your Roteo API key, driven through the official Claude Code CLI; Hermes owns tools, approvals and compaction. No Claude login needed.
 author: Roteo (fork of Nous Research's DirectSDK plugin for Hermes)

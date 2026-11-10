@@ -49,7 +49,9 @@ model:
   default: sonnet
 ```
 
-Pick a model with the short names `opus`, `sonnet` and `haiku`, or a full Claude model id.
+Pick a model with the short names `opus`, `sonnet`, `haiku` and `fable`, or a full Claude model id.
+Each short name runs the newest model of its family that Roteo serves: the plugin reads Roteo's model
+list when it loads, so a new model is there the day Roteo adds it, with no plugin update.
 
 ## Billing and privacy
 
@@ -82,9 +84,12 @@ or set them with `hermes config set`.
 |---|---|
 | "No Roteo API key for this Hermes profile" | Add `ROTEO_API_KEY` to that profile's `.env` |
 | "Roteo did not accept the API key" | Check the key on [app.roteo.ai](https://app.roteo.ai) |
-| "Your Roteo balance is too low" | Top up on [app.roteo.ai](https://app.roteo.ai) |
+| "Billing or credits exhausted ... Insufficient balance" | Top up on [app.roteo.ai](https://app.roteo.ai) |
 | Hermes says the provider "rejected your sign-in" and suggests `auth add ... --type oauth` | That is Hermes' generic wording. The line under it (`Provider said: ...`) has the real reason |
-| A change to the plugin or its settings has no effect | Hermes keeps one gateway process for all profiles: run `hermes gateway stop`, the next request starts a fresh one |
+| "Third-party agent frameworks aren't supported on Claude models" | Hermes is on its `custom` provider, often set by its setup wizard when you enter Roteo as a custom endpoint with a Claude model. Run with `--provider roteo-claude`, or set `model.provider: roteo-claude` in `config.yaml` |
+| "Gateway inaccessible: gateway_elevated" | Hermes' background gateway was started as administrator, often by the installer. Open PowerShell as administrator, run `hermes gateway stop`, then start Hermes from a normal window |
+| A plugin update has no effect | Hermes keeps one gateway process for all profiles: run `hermes gateway stop`, the next request starts a fresh one |
+| "Fable 5.2's safeguards flagged this message" | Fable turns down cybersecurity-related requests, in every tool. Use `-m opus` or `-m sonnet` for that task |
 | "Claude Code is not installed" | Install it (see Requirements) or set `ROTEO_CLAUDE_COMMAND` |
 
 ## Credits
